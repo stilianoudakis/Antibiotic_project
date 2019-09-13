@@ -1,0 +1,427 @@
+---
+title: "Comparing Deans & Students"
+author: "Spiro Stilianoudakis"
+date: "September 25, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+```
+
+
+```{r}
+library(ggplot2)
+library(DT)
+library(knitr)
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+setwd("Y:/Oral Health Services Research Core/Spiro/Holtz_Lena")
+
+deans <- readRDS("deans.rds")
+students <- readRDS("students.rds")
+```
+
+
+# Deans VS Students
+
+## Demographic Tables
+
+```{r}
+#Deans: Position, region, age, gender
+#Students: year in school, region, age, gender, plans after graduation, residency programs
+
+varsd <- c("position", "age", "gender", "region_school")
+varss <- c("residency", "plans" ,"year_school", "age", "gender", "region")
+
+demod <- deans[,which(names(deans) %in% varsd)]
+demos <- students[,which(names(students) %in% varss)]
+
+#Deans
+##Continuous variables
+ddf <- tbl_df(demod)
+
+ddf.sum <- ddf %>%
+  select(age) %>% # select variables to summarise
+  summarise_each(funs(XMean = mean, 
+                      XMedian = median, 
+                      XSD = sd))
+
+ddf.sum.tidy <- ddf.sum %>% gather(stat, val) %>%
+  separate(stat, into = c("var", "stat"), sep = "X") %>%
+  spread(stat, val) %>%
+  select(var, Mean, Median, SD)
+
+ddf.sum.tidy <- data.frame(ddf.sum.tidy)
+colnames(ddf.sum.tidy)[1] <- "Variable"
+ddf.sum.tidy$Variable <- "Age"
+
+##Categorical Variables
+ddf.tab <- ddf %>%
+  select(region_school, position, gender) #%>%
+  #count(Gender, Race, Ethnicity, Diagnostic_group, Severity_index, Status) %>%
+  #mutate(prop = prop.table(n))
+
+ddf.tab.tidy <- ddf.tab %>%
+  gather("var", "value") %>%
+  group_by(var) %>%
+  count(var, value) %>%
+  mutate(prop = prop.table(n))
+
+ddf.tab.tidy <- data.frame(ddf.tab.tidy)
+colnames(ddf.tab.tidy) <- c("Variable", "Level", "N", "Percent")
+
+datatable(ddf.sum.tidy)
+datatable(ddf.tab.tidy)
+
+###################################
+
+#Students
+##Continuous variables
+sdf <- tbl_df(demos[-which(is.na(demos$age)),])
+
+sdf.sum <- sdf %>%
+  select(age) %>% # select variables to summarise
+  summarise_each(funs(XMean = mean, 
+                      XMedian = median, 
+                      XSD = sd))
+
+sdf.sum.tidy <- sdf.sum %>% gather(stat, val) %>%
+  separate(stat, into = c("var", "stat"), sep = "X") %>%
+  spread(stat, val) %>%
+  select(var, Mean, Median, SD)
+
+sdf.sum.tidy <- data.frame(sdf.sum.tidy)
+colnames(sdf.sum.tidy)[1] <- "Variable"
+sdf.sum.tidy$Variable <- "Age"
+
+##Categorical Variables
+sdf.tab <- sdf %>%
+  select(year_school, region, gender, plans, residency) #%>%
+  #count(Gender, Race, Ethnicity, Diagnostic_group, Severity_index, Status) %>%
+  #mutate(prop = prop.table(n))
+
+sdf.tab.tidy <- sdf.tab %>%
+  gather("var", "value") %>%
+  group_by(var) %>%
+  count(var, value) %>%
+  mutate(prop = prop.table(n))
+
+sdf.tab.tidy <- data.frame(sdf.tab.tidy)
+colnames(sdf.tab.tidy) <- c("Variable", "Level", "N", "Percent")
+
+datatable(sdf.sum.tidy)
+datatable(sdf.tab.tidy)
+
+
+```
+
+##(Students) Table (n,%) 3rd year vs 4th year
+
+```{r}
+#Where they are receiving the majority of their education
+courses <- students[,grep(paste(c("dept_courses___","year_school"), collapse = "|"),names(students))]
+courses <- courses[,1:10]
+names(courses)[-1] <- c("Community Dentistry",
+                            "Endodontics",
+                            "Epidemiology",
+                            "Microbiology",
+                            "Periodontics",
+                            "Pharmacology",
+                            "Oral Diagnosis/Medicine",
+                            "Oral Surgery",
+                            "Other")
+lapply(courses[,-1],function(x){table(x,courses$year_school)})
+
+#Hours of training
+hours <- students[,grep(paste(c("hours_training","year_school"), collapse = "|"),names(students))]
+hours <- hours[,1:2]
+table(hours$hours_training, hours$year_school)
+
+#Which teaching formats are most widely used and which are most effective
+format <- students[,grep(paste(c("teaching_format___","year_school"), collapse = "|"),names(students))]
+format <- format[,1:7]
+names(format)[-1] <- c("Lectures",
+                            "Clinical Vignettes/Case Discussions",
+                            "E-learning",
+                            "Web-based learning platform",
+                            "Direct patient care",
+                            "Other")
+lapply(format[,-1],function(x){table(x,format$year_school)})
+
+#Who has the greatest impact on their clinical decision making
+impact <- students[,grep(paste(c("greatest_impact___","year_school"), collapse = "|"),names(students))]
+impact <- impact[,1:8]
+names(impact)[-1] <- c("Full-time faculty in clinic",
+                            "Part-time faculty in clinic",
+                            "Student peers",
+                            "Didactic courses",
+                            "Personal experience",
+                            "Personal research/investigation",
+                            "Other")
+lapply(impact[,-1],function(x){table(x,impact$year_school)})
+
+
+#Percentage of unnecessary
+unnecessay <- students[,grep(paste(c("percent_unnecessary","year_school"), collapse = "|"),names(students))]
+unnecessay <- unnecessay[,1:2]
+table(unnecessay$percent_unnecessary, unnecessay$year_school)
+
+#Role of dentistry in reducing antimicrobial resistance 
+role <- students[,grep(paste(c("should_role","year_school"), collapse = "|"),names(students))]
+role <- role[,1:2]
+table(role$should_role, unnecessay$year_school)
+
+
+#How interested in playing a role in this improvement through self monitoring, etc.
+self <- students[,grep(paste(c("self_role","year_school"), collapse = "|"),names(students))]
+self <- self[,1:2]
+
+```
+
+##(Students) Table (n,%) on Current Level of Understanding
+
+```{r}
+vars <- c("record_id","year_school","infection","choosing","dose","duration","demand")
+confidence <- students[,which(names(students) %in% vars)]
+
+#infection
+tapply(confidence$infection, confidence$year_school, summary)
+tapply(confidence$infection, confidence$year_school, sd)
+#kable(infection)
+
+
+#choosing
+tapply(confidence$choosing, confidence$year_school, summary)
+tapply(confidence$choosing, confidence$year_school, sd)
+#kable(choosing)
+
+
+#dose
+tapply(confidence$dose, confidence$year_school, summary)
+tapply(confidence$dose, confidence$year_school, sd)
+#kable(dose)
+
+
+#duration
+tapply(confidence$duration, confidence$year_school, summary)
+tapply(confidence$duration, confidence$year_school, sd)
+#kable(duration)
+
+
+#demand
+tapply(confidence$demand, confidence$year_school, summary)
+tapply(confidence$demand, confidence$year_school, sd)
+#kable(demand)
+
+
+```
+
+
+##(Students) Table (n,%) on Reasons for Resistance
+
+```{r}
+vars <- c("num_rx","broad_spec","long_duration","dose_low","livestock","hand_wash","development","not_warranted","diagnostic_tools","wrong_anti","non_compliance" )
+
+resisttab <- rbind.data.frame(df1,
+                              df2,
+                              df3,
+                              df4,
+                              df5,
+                              df6,
+                              df7,
+                              df8,
+                              df9,
+                              df10,
+                              df11)
+resisttab$maxc <- c(rep(df1[3,2],3),
+          rep(df2[3,2],3),
+          rep(df3[3,2],3),
+          rep(df4[3,2],3),
+          rep(df5[3,2],3),
+          rep(df6[3,2],3),
+          rep(df7[3,2],3),
+          rep(df8[3,2],3),
+          rep(df9[3,2],3),
+          rep(df10[3,2],3),
+          rep(df11[3,2],3))
+resisttab$Group <- unlist(lapply(vars, function(x){rep(x,3)}))
+resisttab <- resisttab[order(resisttab$maxc, decreasing = TRUE),]
+
+#resisttab$Response <- as.character(resisttab$Response)
+resisttab$Response <- as.factor(resisttab$Response)
+levels(resisttab$Response) <- c("No Impact",
+                            "Some Impact",
+                            "Great Impact")
+#resisttab$Group <- factor(resisttab$Group)
+#levels(resisttab$Group) <- unique(resisttab$Group)
+
+#Creat barplot
+ggplot(resisttab, aes(fill=Response, y=Count, x=factor(Group, levels = unique(resisttab$Group)))) + 
+  geom_bar( stat="identity") +
+  #Great Impact
+  annotate("text",x=11,y=15,label="12%", size=10) +
+  annotate("text",x=10,y=15,label="17%", size=10) +
+  annotate("text",x=9,y=15,label="26%", size=10) +
+  annotate("text",x=8,y=15,label="29%", size=10) +
+  annotate("text",x=7,y=15,label="31%", size=10) +
+  annotate("text",x=6,y=15,label="46%", size=10) +
+  annotate("text",x=5,y=15,label="56%", size=10) +
+  annotate("text",x=4,y=15,label="72%", size=10) +
+  annotate("text",x=3,y=15,label="80%", size=10) +
+  annotate("text",x=2,y=15,label="87%", size=10) +
+  annotate("text",x=1,y=15,label="88%", size=10) +
+  #Some Impact
+  annotate("text",x=11,y=70,label="46%", size=10) +
+  annotate("text",x=10,y=80,label="44%", size=10) +
+  annotate("text",x=9,y=90,label="53%", size=10) +
+  annotate("text",x=8,y=100,label="55%", size=10) +
+  annotate("text",x=7,y=110,label="52%", size=10) +
+  annotate("text",x=6,y=120,label="41%", size=10) +
+  annotate("text",x=5,y=130,label="40%", size=10) +
+  annotate("text",x=4,y=140,label="27%", size=10) +
+  annotate("text",x=3,y=150,label="20%", size=10) +
+  annotate("text",x=2,y=160,label="12%", size=10) +
+  annotate("text",x=1,y=160,label="12%", size=10) +
+  #No Impact
+  annotate("text",x=11,y=180,label="42%", size=10) +
+  annotate("text",x=10,y=180,label="39%", size=10) +
+  annotate("text",x=9,y=180,label="21%", size=10) +
+  annotate("text",x=8,y=180,label="16%", size=10) +
+  annotate("text",x=7,y=180,label="17%", size=10) +
+  annotate("text",x=6,y=180,label="13%", size=10) +
+  annotate("text",x=5,y=180,label="4%", size=10) +
+  annotate("text",x=4,y=180,label="1%", size=10) +
+  annotate("text",x=3,y=180,label="0%", size=10) +
+  annotate("text",x=2,y=180,label="<1%", size=10) +
+  annotate("text",x=1,y=180,label="0%", size=10) +
+  scale_x_discrete(name = "Scenario",
+                   labels = c("Prescribing antibiotics when the \n situation doesn't warrant its use",
+                              "Too many \n antibiotic prescriptions",
+                              "Patient non-compliance or \n self-medicating with antibiotic treatment",
+                              "Too many broad-spectrum \n antibiotics used",
+                              "Using the wrong \n antibiotic for the situation",
+                              "Excessive use of \n antibiotics in livestock",
+                              "Too long of a duration \n of antibiotic treatment",
+                              "Lack of effective \n diagnostic tools",
+                              "Dosing of antibiotics \n are too low",
+                              "Lack of antibiotics \n being developed",
+                              "Poor hand hygiene")) +
+  theme_bw() +
+  theme(axis.text.x = element_text(size=20),
+        axis.text.y = element_text(size = 20),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
+        legend.text=element_text(size=20),
+        legend.title=element_text(size=25)) +
+  coord_flip()
+  
+
+```
+
+
+##Compare Students and Faculty
+
+```{r}
+
+varsd <- c("rate_education", "hours_didactic", "dentistry_role", "students_role", "rate_unnecessary", "perceived_importances", "students_benefit")
+
+varss <- c("rate_curriculum", "hours_training", "should_role", "self_role", "percent_unnecessary", "importance", "more_educ")
+
+compd <- deans[, which(names(deans) %in% varsd)]
+comps <- students[, which(names(students) %in% varss)]
+comps <- comps[,c(1,2,3,5,4,6,7)]
+
+names(comps) <- names(compd)
+
+#Curriculum
+table(compd$rate_education, useNA = "ifany")
+table(comps$rate_education, useNA = "ifany")
+
+
+table(compd$hours_didactic, useNA = "ifany")
+table(comps$hours_didactic, useNA = "ifany")
+
+
+table(compd$dentistry_role, useNA = "ifany")
+table(comps$dentistry_role, useNA = "ifany")
+
+#table(compd$students_role, useNA = "ifany")
+#table(comps$students_role, useNA = "ifany")
+
+table(compd$rate_unnecessary, useNA = "ifany")
+table(comps$rate_unnecessary, useNA = "ifany")
+
+
+#table(compd$perceived_importances, useNA = "ifany")
+#table(comps$perceived_importances, useNA = "ifany")
+
+table(compd$students_benefit, useNA = "ifany")
+table(comps$students_benefit, useNA = "ifany")
+
+#################################################################
+
+#Most helpful
+#students
+helpful <- students[,grep("format_helpful___",names(students))]
+helpful <- helpful[,1:8]
+helpful <- data.frame(names(helpful),colSums(helpful))
+rownames(helpful) <- NULL
+helpful$names.helpful. <- c("Lectures",
+                            "Clinical Vignettes/Case Discussions",
+                            "E-learning",
+                            "Web-based learning platform",
+                            "Direct patient care",
+                            "Specialty Rotations",
+                            "External Rotations",
+                            "Other")
+
+
+#deans
+tformatdf <- readRDS("tformatdf.rds")
+tformatdf$Teaching.Format <- as.character(tformatdf$Teaching.Format)
+tformatdf$Teaching.Format <- helpful$names.helpful.
+
+cbind.data.frame(tformatdf$Teaching.Format,
+                 helpful$colSums.helpful.,
+                 tformatdf$Most.Helpful)
+
+
+#where it is being taught
+#students
+courses <- students[,grep("dept_courses___",names(students))]
+courses <- courses[,1:9]
+courses <- data.frame(Deptartment=c("Community Dentistry",
+                            "Endodontics",
+                            "Epidemiology",
+                            "Microbiology",
+                            "Periodontics",
+                            "Pharmacology",
+                            "Oral Diagnosis/Medicine",
+                            "Oral Surgery",
+                            "Other"),
+                      Rating=colSums(courses))
+rownames(courses) <- NULL
+courses$Deptartment <- as.character(courses$Deptartment)
+courses$Rating[9] <- 22+52
+courses <- courses[-7,]
+
+
+#deans
+dideddf <- readRDS("dideddf.rds")
+dideddf <- dideddf[-9,]
+
+cbind.data.frame(courses$Deptartment, courses$Rating, dideddf$Didactic.Education)
+
+##################################################################
+
+
+```
+

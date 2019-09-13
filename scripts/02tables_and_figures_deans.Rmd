@@ -1,0 +1,471 @@
+---
+title: "Creating Tables and Plots for Deans"
+author: "Spiro Stilianoudakis"
+date: "September 18, 2018"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+```
+
+
+```{r}
+library(ggplot2)
+library(DT)
+library(knitr)
+```
+
+# Dean Survey
+
+```{r}
+setwd("C:/Users/Spiro Stilianoudakis/Documents/Dentistry_VCU_RA_2018/Holtz_Lena")
+
+deans <- readRDS("deans.rds")
+
+cguidedf  <- readRDS("cguidedf.rds")
+
+ctraindf <- readRDS("ctraindf.rds")
+
+dideddf <- readRDS("dideddf.rds")
+
+tformatdf <- readRDS("tformatdf.rds")
+
+```
+
+
+## School Region
+
+###What is the region of your dental school?
+
+```{r}
+region <- data.frame(table(deans$region_school, useNA = "ifany"))
+names(region) <- c("Region", "Count")
+
+p<-ggplot(data=region, aes(x = Region, y = Count)) +
+  ylim(0,8) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() #+
+  #coord_flip()
+p
+
+```
+
+
+## Position
+###What is your position?
+
+```{r}
+
+position <- data.frame(table(deans$position, useNA = "ifany"))
+names(position) <- c("Position", "Count")
+
+p<-ggplot(data=position, aes(x = Position, y = Count)) +
+  ylim(0,9) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() #+
+  #coord_flip()
+p
+
+pos2 <- deans[,names(deans) %in% c("position", "other_position")]
+pos2.1 <- data.frame(Position = sort(rep(unique(pos2$position),3)),
+                     "Other Position" = rep(unique(pos2$other_position),3),
+                     Count = c(3,0,0,8,0,0,0,4,3))
+
+pos2.1$Other.Position <- as.character(pos2.1$Other.Position)
+pos2.1$Other.Position[which(pos2.1$Other.Position=="Director")] <- "Program Director"
+pos2.1$Other.Position <- factor(pos2.1$Other.Position)
+
+p <- ggplot(data=pos2.1, aes(x=Position, y=Count, fill=Other.Position)) +
+  geom_bar(stat="identity") +
+  scale_fill_manual(name = "Other Position", 
+                    breaks = c("Program Director", "Professor"),
+                    values=c("green","red","steelblue")) +
+  #geom_text(aes(label=Count), vjust=-.5, color="white", size=5)+
+  theme_minimal()
+p
+
+```
+
+
+## Department Chair
+###Which department do you chair?
+
+```{r}
+deptchair <- data.frame(table(deans$dept_chair, useNA = "ifany"))
+names(deptchair) <- c("Department", "Count")
+deptchair$Department <- as.character(deptchair$Department)
+deptchair$Department[1] <- "Clinical Sciences"
+deptchair$Department[7] <- "Clinical Sciences"
+deptchair$Department[2] <- "Comprehensive Dentistry"
+
+deptchair$Count[1] <- 2
+deptchair$Count[2] <- 2
+
+deptchair <- deptchair[c(1,2,4,5,6),]
+
+p<-ggplot(data=deptchair, aes(x = Department, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,3) +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 25))) #+
+  #coord_flip()
+p
+
+```
+
+## Age
+###What is your age?
+
+```{r}
+#summary(deans$age)
+
+age <- data.frame(Minimum = as.vector(summary(deans$age))[1],
+                  "First Quartile"= as.vector(summary(deans$age))[2],
+                  Median= as.vector(summary(deans$age))[3],
+                  Mean= as.vector(summary(deans$age))[4],
+                  "Third Quartile"= as.vector(summary(deans$age))[5],
+                  Maximum= as.vector(summary(deans$age))[6])
+age <- round(age, 2)
+#datatable(age)
+kable(age)
+
+```
+
+## Gender
+###What is your gender?
+
+```{r}
+gender <- data.frame(table(deans$gender, useNA = "ifany"))
+names(gender) <- c("Gender", "Count")
+
+p<-ggplot(data=gender, aes(x = Gender, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,11) +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 20))) #+
+  #coord_flip()
+p
+```
+
+## Established Guidlines
+###Do you currently have established clinical guidelines for antibiotic prescribing within any disciplines/departments at your dental school?
+
+```{r}
+
+guides <- data.frame(table(deans$established_guidelines, useNA = "ifany"))
+names(guides) <- c("Established.Guidelines", "Count")
+
+p<-ggplot(data=guides, aes(x = Established.Guidelines, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,13) +
+  scale_x_discrete(name = "Established Guidelines") +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() #+
+  #theme(axis.text.x = element_text(angle = 90)) #+
+  #coord_flip()
+p
+
+```
+
+## Department Guidelines
+###Which disciplines have established clinical guidelines for antibiotic prescribing?
+
+```{r}
+#cguidedf
+
+p<-ggplot(data=cguidedf, aes(x = Discipline, y = Established.Guidlines)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,7) +
+  scale_x_discrete(name = "Discipline") +
+  ylab("Count") +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Established.Guidlines), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 20))) #+
+  #coord_flip()
+p
+
+
+
+```
+
+## Courses
+###Which courses currently provide didactic education regarding antibiotics in the dental school curriculum?
+
+```{r}
+#dideddf
+dideddf <- dideddf[-9,]
+
+p<-ggplot(data=dideddf, aes(x = Department, y = Didactic.Education)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,20) +
+  scale_x_discrete(name = "Department") +
+  ylab("Count") +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Didactic.Education), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+
+#kable(deans$other_courses)
+
+
+```
+
+## Rate education
+### How would you rate the education regarding appropriate use of antibiotics in the dental school curriculum?
+
+```{r}
+ed <- data.frame(table(deans$rate_education, useNA = "ifany"))
+names(ed) <- c("Rating", "Count")
+
+p<-ggplot(data=ed, aes(x = Rating, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,11) +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+```
+
+## Hours didactic
+###How many hours of training in principles and indications of antibiotic use do the dental students receive during their 4 years of study?
+
+```{r}
+hours <- data.frame(table(deans$hours_didactic, useNA = "ifany"))
+names(hours) <- c("Hours", "Count")
+
+p<-ggplot(data=hours, aes(x = Hours, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,11) +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+```
+
+## Format helpful
+###Which of the teaching formats do you think have been most helpful in the education of dental students regarding antibiotics? [Please select up to 3]
+
+```{r}
+#tformatdf
+tformatdf <- tformatdf[-8,]
+
+p<-ggplot(data=tformatdf, aes(x = Teaching.Format, y = Most.Helpful)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,19) +
+  scale_x_discrete(name = "Teaching Format") +
+  ylab("Count") +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Most.Helpful), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 50))) #+
+  #coord_flip()
+p
+
+```
+
+## Resistance curriculum
+###Is antimicrobial resistance currently being taught in the dental school curriculum?
+
+```{r}
+
+#table(deans$resistance_curriculum)
+
+curr <- data.frame(table(deans$resistance_curriculum, useNA = "ifany"))
+names(curr) <- c("Curriculum", "Count")
+
+p<-ggplot(data=curr, aes(x = Curriculum, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,18) +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+
+```
+
+## Clinical training
+###Which departments/disciplines currently provide clinical training regarding antibiotics within the dental school curriculum?
+
+```{r}
+#ctraindf
+ctraindf <- ctraindf[-9,]
+
+p<-ggplot(data=ctraindf, aes(x = Department, y = Clinical.Training)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,19) +
+  scale_x_discrete(name = "Teaching Format") +
+  ylab("Count") +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Clinical.Training), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 20))) #+
+  #coord_flip()
+p
+```
+
+
+## Students benefit
+###Do you think students could benefit from more education on antibiotic selection and indications at your dental school?
+
+```{r}
+#table(deans$students_benefit)
+
+sben <- data.frame(table(deans$students_benefit, useNA = "ifany"))
+names(sben) <- c("Benefit.to.Student", "Count")
+sben$Benefit.to.Student <- factor(sben$Benefit.to.Student, levels=c("Yes", "No", "Recieving adequate training"))
+
+p<-ggplot(data=sben, aes(x = Benefit.to.Student, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,11) +
+  scale_x_discrete(name = "Benefit to Student") +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 25))) #+
+  #coord_flip()
+p
+```
+
+
+## Protocols
+###Are there any antibiotic stewardship/monitoring protocols in place at your institution?
+
+```{r}
+#table(deans$protocols)
+
+pro <- data.frame(table(deans$protocols, useNA = "ifany"))
+names(pro) <- c("Protocols", "Count")
+pro$Protocols <- factor(pro$Protocols, levels=c("Yes", "No", "Unsure"))
+
+p<-ggplot(data=pro, aes(x = Protocols, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,11) +
+  scale_x_discrete(name = "Protocols") +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+```
+
+## Percieved importances
+###On a scale of 0-10, how important do you perceive this topic to be within the dental curriculum? Note: 0 being least important and 10 being most important
+
+```{r}
+#table(deans$perceived_importances)
+
+imp <- data.frame(table(deans$perceived_importances, useNA = "ifany"))
+names(imp) <- c("Importance", "Count")
+imp <- rbind(data.frame(Importance=0,Count=0), imp)
+imp$Importance <- factor(imp$Importance, levels=0:10)
+#imp$Importance <- factor(imp$Importance, levels=c())
+
+p<-ggplot(data=imp, aes(x = Importance, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,7) +
+  scale_x_discrete(name = "Importance") +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() #+
+  #theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+```
+
+
+## Rate unnecessary
+###What percentage of antibiotic prescriptions within dentistry do you think are found to be unnecessary or inappropriate?
+
+```{r}
+#table(deans$rate_unnecessary)
+
+unnec <- data.frame(table(deans$rate_unnecessary, useNA = "ifany"))
+names(unnec) <- c("Percentage", "Count")
+unnec <- rbind.data.frame(unnec, data.frame(Percentage="61-80%", Count=0))
+unnec <- unnec[c(1,2,3,4,6,5),]
+unnec$Percentage <- as.character(unnec$Percentage)
+unnec$Percentage <- factor(unnec$Percentage)
+levels(unnec$Percentage) <- c("<1%"  , "1-20%",  "21-40%",  "41-60%","61-80%", "81-100%")
+
+p<-ggplot(data=unnec, aes(x = Percentage, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,8) +
+  scale_x_discrete(name = "Percentage") +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+```
+
+
+## Dentistry role
+###Do you feel that the field of dentistry should play an important role in reducing antimicrobial resistance?
+
+```{r}
+#table(deans$dentistry_role)
+
+drole <- data.frame(table(deans$dentistry_role, useNA = "ifany"))
+names(drole) <- c("Role", "Count")
+#drole$Role <- factor(unnec$Percentage, levels=c(Strongly Agree             Agree           Neutral          Disagree Strongly Disagree ))
+
+p<-ggplot(data=drole, aes(x = Role, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,13) +
+  scale_x_discrete(name = "") +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+```
+
+
+## Students role
+###Do you feel that dental students can contribute in reducing/controlling antibiotic resistance?
+
+```{r}
+#table(deans$students_role)
+
+srole <- data.frame(table(deans$students_role, useNA = "ifany"))
+names(srole) <- c("Role", "Count")
+#drole$Role <- factor(unnec$Percentage, levels=c(Strongly Agree             Agree           Neutral          Disagree Strongly Disagree ))
+
+p<-ggplot(data=srole, aes(x = Role, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  ylim(0,11) +
+  scale_x_discrete(name = "") +
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+```
+
+

@@ -1,0 +1,465 @@
+---
+title: "Untitled"
+author: "Spiro Stilianoudakis"
+date: "September 13, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Loading Libraries
+
+```{r}
+
+```
+
+# Setting working directory
+
+```{r}
+setwd("C:/Users/Spiro Stilianoudakis/Documents/Dentistry_VCU_RA_2018/Holtz_Lena")
+```
+
+
+# Reading in Dean Survey
+
+```{r}
+deans <- read.csv("AcademicDeansAntibio_DATA_2018-09-12_1017.csv",
+                  header = TRUE,
+                  na.strings = "",
+                  stringsAsFactors = FALSE)
+
+dim(deans)
+#20 58
+```
+
+## Cleaning Data
+
+```{r}
+names(deans)
+
+#Renaming date column
+names(deans)[3] <- "date_of_survey"
+
+#Looking at redcap_survey_identifier column
+length(is.na(deans$redcap_survey_identifier)) #20
+#all rows are missing; remove column
+
+deans <- deans[,-which(names(deans)=="redcap_survey_identifier")]
+
+#Looking at region_school variable
+##What is the region of your dental school?
+###Northeast <- 1
+###South <- 2
+###Midwest <- 3
+###West <- 4
+class(deans$region_school)
+length(which(is.na(deans$region_school))) #0 missing
+table(deans$region_school)
+deans$region_school <- ifelse(deans$region_school==1, "Northeast", 
+                              ifelse(deans$region_school==2, "South",
+                                     ifelse(deans$region_school==3, "Midwest",
+                                            ifelse(deans$region_school==4, "West",NA))))
+table(deans$region_school)
+
+
+#Looking at other_position variable
+##Please describe your position?
+class(deans$other_position)
+length(which(is.na(deans$other_position))) #11
+table(deans$other_position)
+#1 subject was a resident; remove them
+deans <- deans[-grep("resident", deans$other_position),]
+deans <- deans[-grep("Resident", deans$other_position),]
+#Code missing responses as unknown
+deans$other_position[is.na(deans$other_position)] <- "Unknown"
+deans$other_position <- ifelse(grepl("Prof", deans$other_position), "Professor",
+                               ifelse(grepl("GPD",deans$other_position), "Director",
+                                      ifelse(grepl("Director",deans$other_position), "Director","Unknown")))
+table(deans$other_position)
+
+
+#Looking at dept_chair variable
+##Which department do you chair?
+class(deans$dept_chair)
+length(which(is.na(deans$dept_chair))) #11
+deans$dept_chair[is.na(deans$dept_chair)] <- "Unknown"
+deans$dept_chair[which(deans$dept_chair=="endo")] <- "Endodontics"
+table(deans$dept_chair)
+
+
+#Looking at Position variable
+##What is your position?
+###Academic Dean <- 1
+###Department Chair <- 2
+###Other <- 3
+class(deans$position)
+length(which(is.na(deans$position))) #0
+table(deans$position)
+deans$position <- ifelse(deans$position==1, "Academic Dean", 
+                              ifelse(deans$position==2, "Department Chair",
+                                     ifelse(deans$position==3, "Other",NA)))
+table(deans$position)
+
+#Looking at Age variable
+##What is your age?
+class(deans$age)
+length(which(is.na(deans$age))) #0
+summary(deans$age)
+
+#Looking at Gender variable
+##What is your gender?
+class(deans$gender)
+length(which(is.na(deans$gender))) #0
+table(deans$gender)
+deans$gender <- ifelse(deans$gender==1, "Male",
+                       ifelse(deans$gender==2, "Female","Prefer not to answer"))
+table(deans$gender)
+
+#Looking at established_guidlines variable
+##Do you currently have established clinical guidelines for antibiotic prescribing within any disciplines/departments at your dental school?
+class(deans$established_guidelines)
+length(which(is.na(deans$established_guidelines))) #1
+table(deans$established_guidelines)
+deans$established_guidelines <- ifelse(deans$established_guidelines==0, "No",
+                                       ifelse(deans$established_guidelines==1, "Yes", "Unknown"))
+deans$established_guidelines[is.na(deans$established_guidelines)] <- "Unknown"
+table(deans$established_guidelines)
+
+
+#Looking at dept_guidelines 1-8
+##Which disciplines have established clinical guidelines for antibiotic prescribing?
+###Endodontics <- C1
+###General Practice <- C2
+###Oral Diagnosis <- C3
+###Oral Surgery <- C4
+###Pediatrics <- C5
+###Periodontics <- C6
+###Institution-wide <- C7
+###Other <- C8
+cguidedf <- deans[,grep("depts_guidelines", names(deans))]
+dim(cguidedf)
+colSums(is.na(cguidedf)) #0 for all
+names(cguidedf) <- c("Endodontics",
+                     "General Practice",
+                     "Oral Diagnosis",
+                     "Oral Surgery",
+                     "Pediatrics",
+                     "Periodontics",
+                     "Institution-wide",
+                     "Other")
+colSums(cguidedf)
+cguidedf <- data.frame(Discipline = names(cguidedf),
+                       "Established Guidlines" = as.vector(colSums(cguidedf)))
+
+#Looking at other_disciplines variable
+class(deans$other_disciplines)
+length(which(is.na(deans$other_disciplines))) #17
+deans$other_disciplines[is.na(deans$other_disciplines)] <- "Unknown"
+table(deans$other_disciplines)
+
+
+#looking at courses__1-9
+##Which courses currently provide didactic education regarding antibi...the dental school curriculum?
+###Community Dentistry
+###Endodontics
+###Epidemiology
+###Microbiology
+###Periodontics
+###Pharmacology
+###Oral Surgery
+###Other
+###None
+dideddf <- deans[,grep("courses___", names(deans))]
+dim(dideddf)
+names(dideddf) <- c("Community Dentistry",
+                    "Endodontics",
+                    "Epidemiology",
+                    "Microbiology",
+                    "Periodontics",
+                    "Pharmacology",
+                    "Oral Surgery",
+                    "Other",
+                    "None")
+colSums(is.na(dideddf)) #0 for all
+colSums(dideddf)
+dideddf <- data.frame(Department = names(dideddf),
+                       "Didactic Education" = as.vector(colSums(dideddf)))
+dideddf
+
+
+#looking at other_courses variable
+class(deans$other_courses)
+table(deans$other_courses)
+deans$other_courses[grep("clinical", deans$other_courses)] <- "Clinical Medicine"
+deans$other_courses[grep("complex", deans$other_courses)] <- "Dental Management"
+deans$other_courses[grep("Diag", deans$other_courses)] <- "Oral Diagnosis & Pathology"
+deans$other_courses[grep("Pediatric", deans$other_courses)] <- "Pediatrics"
+deans$other_courses[is.na(deans$other_courses)] <- "Unknown"
+table(deans$other_courses)
+
+#looking at rate_education variable
+## How would you rate the education regarding appropriate use of antibiotics in the dental school curriculum?
+class(deans$rate_education)
+length(which(is.na(deans$rate_education))) #0
+table(deans$rate_education)
+deans$rate_education <- ifelse(deans$rate_education==0, "Neutral",
+                               ifelse(deans$rate_education==1, "Useful", "Very Useful"))
+table(deans$rate_education)
+deans$rate_education <- factor(deans$rate_education, levels = c("Very Useful",
+                                                                   "Useful",
+                                                                   "Neutral",
+                                                                   "Not Useful",
+                                                                   "Not at all Useful"))
+table(deans$rate_education)
+
+
+#looking at the hours_didactic variable
+##How many hours of training in principles and indications of antibiotic use do the dental students receive during their 4 years of study?
+###0-10 
+###11-20
+###21-40
+###41-60
+###60+
+###Unknown
+class(deans$hours_didactic)
+length(which(is.na(deans$hours_didactic))) #3
+table(deans$hours_didactic)
+deans$hours_didactic <- ifelse(deans$hours_didactic==1, "0-10",
+                               ifelse(deans$hours_didactic==2, "11-20", 
+                                      ifelse(deans$hours_didactic==3, "21-40", "Unknown")))
+deans$hours_didactic[is.na(deans$hours_didactic)] <- "Unknown"
+table(deans$hours_didactic)
+deans$hours_didactic <- factor(deans$hours_didactic, levels = c("0-10",
+                                                                "11-20",
+                                                                "21-40",
+                                                                "41-60",
+                                                                "60+",
+                                                                "Unknown"))
+table(deans$hours_didactic)
+
+
+#looking at format_helpful1-8 variable
+##Which of the teaching formats do you think have been most helpful in the education of dental students regarding antibiotics? [Please select up to 3]
+###Lectures
+###Clinical vignettes/Clinical case discussions
+###E-learning (self-training)
+###Web-based server software learning platform
+###Clinical Care
+###Specialty rotations/training
+###External rotations
+###Other
+tformatdf <- deans[,grep("format_helpful", names(deans))]
+dim(tformatdf)
+colSums(is.na(tformatdf)) #0 for all
+names(tformatdf) <- c("Lectures",
+                     "Clinical vignettes/case discussions",
+                     "E-learning",
+                     "Web-based server software",
+                     "Clinical Care",
+                     "Specialty rotations/training",
+                     "External rotations",
+                     "Other")
+colSums(tformatdf)
+tformatdf <- data.frame("Teaching Format" = names(tformatdf),
+                       "Most Helpful" = as.vector(colSums(tformatdf)))
+
+
+#Looking at resistance_curriculum variable
+##Is antimicrobial resistance currently being taught in the dental school curriculum?
+class(deans$resistance_curriculum)
+length(which(is.na(deans$resistance_curriculum)))  #1
+table(deans$resistance_curriculum)
+deans$resistance_curriculum <- ifelse(deans$resistance_curriculum==1, "Yes", "Unknown")
+deans$resistance_curriculum[is.na(deans$resistance_curriculum)] <- "Unknown"
+table(deans$resistance_curriculum)
+deans$resistance_curriculum <-factor(deans$resistance_curriculum, levels = c("Yes",
+                                                                             "No",
+                                                                             "Unknown"))
+table(deans$resistance_curriculum)
+
+
+#looking at clinical_training__1-9 variables
+##Which departments/disciplines currently provide clinical training regarding antibiotics within the dental school curriculum?
+###General Practice
+###Pediatrics
+###Endodontics
+###Oral Surgery
+###Oral Diagnosis
+###Periodontics
+###Institution-wide
+###Other
+###None
+ctraindf <- deans[,grep("clinical_training", names(deans))]
+dim(ctraindf)
+colSums(is.na(ctraindf)) #0 for all
+names(ctraindf) <- c("General Practice",
+                     "Pediatrics",
+                     "Endodontics",
+                     "Oral Surgery",
+                     "Oral Diagnosis",
+                     "Periodontics",
+                     "Institution-wide",
+                     "Other",
+                     "None")
+colSums(ctraindf)
+ctraindf <- data.frame("Department" = names(ctraindf),
+                       "Clinical Training" = as.vector(colSums(ctraindf)))
+
+
+
+#looking at students_benefit variable
+##Do you think students could benefit from more education on antibiotic selection and indications at your dental school?
+class(deans$students_benefit) 
+length(which(is.na(deans$students_benefit))) #0
+table(deans$students_benefit)
+deans$students_benefit <- ifelse(deans$students_benefit==0, "No",
+                                 ifelse(deans$students_benefit==1, "Yes", "Recieving adequate training"))
+table(deans$students_benefit)
+
+#looking at protocols variable
+##Are there any antibiotic stewardship/monitoring protocols in place at your institution?
+class(deans$protocols)
+length(which(is.na(deans$protocols)))
+table(deans$protocols)
+deans$protocols <- ifelse(deans$protocols==0, "No",
+                                 ifelse(deans$protocols==1, "Yes", "Unsure"))
+table(deans$protocols)
+
+
+#looking at describe_protocols variable
+##Please describe your anibiotic protocols in place at your institution
+class(deans$describe_protocols)
+length(which(is.na(deans$describe_protocols))) #17
+#all values are missing; remove variable
+deans <- deans[,-which(names(deans)=="describe_protocols")]
+
+#looking at perceived_importances variable
+##On a scale of 0-10, how important do you perceive this topic to be within the dental curriculum? Note: 0 being least important and 10 being most important
+class(deans$perceived_importances)
+length(which(is.na(deans$perceived_importances)))
+table(deans$perceived_importances)
+deans$perceived_importances <- as.character(deans$perceived_importances)
+deans$perceived_importances <- factor(deans$perceived_importances, levels = c("1",
+                                                                              "2",
+                                                                              "3",
+                                                                              "4",
+                                                                              "5",
+                                                                              "6",
+                                                                              "7",
+                                                                              "8",
+                                                                              "9",
+                                                                              "10"))
+table(deans$perceived_importances)
+
+
+#looking at rate_unnecessary variable
+##What percentage of antibiotic prescriptions within dentistry do you think are found to be unnecessary or inappropriate?
+###<1%
+###1-20%
+###21-40%
+###41-60%
+###61-80%
+###81-100%
+class(deans$rate_unnecessary)
+length(which(is.na(deans$rate_unnecessary))) #0
+table(deans$rate_unnecessary)
+deans$rate_unnecessary <- ifelse(deans$rate_unnecessary==1, "<1%",
+                                 ifelse(deans$rate_unnecessary==2, "1-20%",
+                                        ifelse(deans$rate_unnecessary==3, "21-40%",
+                                               ifelse(deans$rate_unnecessary==4, "41-60%",
+                                                      ifelse(deans$rate_unnecessary==5, "61-80%","81-100%")))))
+table(deans$rate_unnecessary)
+
+
+#looking at dentistry_role variable
+##The field of dentistry should play an important role in reducing antimicrobial resistance?
+class(deans$dentistry_role)
+length(which(is.na(deans$dentistry_role))) #0
+table(deans$dentistry_role)
+deans$dentistry_role <- ifelse(deans$dentistry_role==1,"Agree", "Strongly Agree")
+table(deans$dentistry_role)
+deans$dentistry_role <- factor(deans$dentistry_role, levels = c("Strongly Agree",
+                                                                "Agree",
+                                                                "Neutral",
+                                                                "Disagree",
+                                                                "Strongly Disagree"))
+table(deans$dentistry_role)
+
+
+#Looking at students_role variable
+##Dental students can contribute in reducing/controlling antibiotic resistance?
+class(deans$students_role)
+length(which(is.na(deans$students_role))) #1
+table(deans$students_role)
+deans$students_role <- ifelse(deans$students_role==1,"Agree", 
+                               ifelse(deans$students_role==2, "Strongly Agree", "Unknown"))
+deans$students_role[is.na(deans$students_role)] <- "Unknown" 
+table(deans$students_role)
+deans$students_role <- factor(deans$students_role, levels = c("Strongly Agree",
+                                                                "Agree",
+                                                                "Neutral",
+                                                                "Disagree",
+                                                                "Strongly Disagree",
+                                                              "Unknown"))
+table(deans$students_role)
+
+
+```
+
+
+#Saving data
+
+```{r}
+
+saveRDS(cguidedf,"cguidedf.rds")
+
+saveRDS(ctraindf,"ctraindf.rds")
+
+saveRDS(dideddf,"dideddf.rds")
+
+saveRDS(tformatdf,"tformatdf.rds")
+
+saveRDS(deans, "C:/Users/Spiro Stilianoudakis/Documents/Dentistry_VCU_RA_2018/Holtz_Lena/deans.rds")
+```
+
+
+# Reading in Student Survey
+
+```{r}
+
+students <- readRDS("students.RDS")
+
+dim(students)
+#218 153
+
+```
+
+## Cleaning Data
+
+```{r}
+
+#Regroup: record_id 158 as a D3
+students$year_school[which(students$record_id==158)] <- 3
+
+#checking year of dental school for students
+#remove any that are not 3 or 4
+table(students$year_school)
+# 1  2  3  4  5 
+# 2 25 92 96  2 
+students <- students[which(students$year_school==3 | students$year_school==4),]
+table(students$year_school)
+
+#Exclude: record_ID 144
+#this student was already excluded because he was recorded as being in year 5
+
+
+```
+
+# Saving data
+
+```{r}
+saveRDS(students, "students.rds")
+```
+

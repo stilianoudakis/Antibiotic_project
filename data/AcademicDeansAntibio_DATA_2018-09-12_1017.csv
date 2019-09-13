@@ -1,0 +1,21 @@
+record_id,redcap_survey_identifier,antibiotics_and_antimicrobial_resistance_in_dentis_timestamp,region_school,position,other_position,dept_chair,age,gender,established_guidelines,depts_guidelines___1,depts_guidelines___2,depts_guidelines___3,depts_guidelines___4,depts_guidelines___5,depts_guidelines___6,depts_guidelines___7,depts_guidelines___8,other_disciplines,courses___1,courses___2,courses___3,courses___4,courses___5,courses___6,courses___7,courses___8,courses___9,other_courses,rate_education,hours_didactic,format_helpful___1,format_helpful___2,format_helpful___3,format_helpful___4,format_helpful___5,format_helpful___6,format_helpful___7,format_helpful___8,resistance_curriculum,clinical_training___1,clinical_training___2,clinical_training___3,clinical_training___4,clinical_training___5,clinical_training___6,clinical_training___7,clinical_training___8,clinical_training___9,students_benefit,protocols,describe_protocols,perceived_importances,rate_unnecessary,dentistry_role,students_role,comments,antibiotics_and_antimicrobial_resistance_in_dentis_complete
+1,,4/19/2018,3,2,,endo,64,1,1,1,0,0,0,0,0,0,0,,0,1,0,1,1,1,1,0,0,,2,1,1,0,0,0,1,0,0,0,1,1,1,1,1,0,1,0,0,0,1,0,,10,6,2,2,,2
+2,,4/19/2018,1,2,,Periodontics,75,1,0,0,0,0,0,0,0,0,0,,0,1,0,0,1,1,1,0,0,,1,1,1,1,0,0,1,0,0,0,1,1,1,1,1,0,1,0,0,0,9,0,,5,4,2,2,,2
+3,,4/19/2018,4,2,,clinical sciences,64,2,1,1,1,1,1,1,1,0,0,,0,1,0,1,1,1,1,1,0,clinical medicine,1,2,0,1,1,0,1,1,0,0,1,1,0,1,1,0,1,0,1,0,0,1,Clinical Medicine and OS mentor ,8,4,1,1,"Hard to answer the % questions, as within the school I feel with our program that it is quite low--1% range.  ",2
+4,,4/20/2018,1,3,Omfs resident,,26,1,0,0,0,0,0,0,0,0,0,,0,1,0,1,1,1,1,0,0,,2,3,0,0,0,0,1,1,0,0,1,1,1,1,1,1,1,1,0,0,0,0,,3,6,0,-1,,2
+5,,4/20/2018,2,3,GPD,,61,1,1,0,0,0,0,0,0,1,0,,1,1,1,1,1,1,1,0,0,,2,3,0,1,0,0,1,1,0,0,1,1,1,1,1,1,1,1,0,0,9,9,,4,3,1,1,,2
+6,,4/20/2018,1,3,Resident,,29,1,1,0,0,0,1,0,0,0,0,,0,1,0,1,1,1,1,0,0,,1,2,0,1,0,0,0,1,1,0,1,0,0,0,1,0,0,0,0,0,1,9,,0,6,-1,-2,"Indications for antibiotics are usually standard, however due to medical legal considerations and public/patient perspective over prescribing is common. ",2
+7,,4/20/2018,3,1,,,56,2,1,0,0,0,0,0,0,0,1,Oral Medicine,0,1,0,1,1,1,1,1,0,Dental management of the medically complex patient,1,3,1,1,0,0,1,1,0,0,1,1,1,1,1,0,1,0,1,0,9,9,,7,3,2,2,,2
+8,,4/23/2018,2,2,,Comprehensive Dentistry,70,1,1,1,1,1,1,1,1,1,0,,0,0,0,1,1,1,1,0,0,,2,2,1,0,0,0,1,0,0,0,1,1,1,1,1,1,1,0,0,0,1,9,,8,1,2,1,,2
+9,,4/23/2018,2,3,Associate Professor,,55,1,1,1,0,0,0,0,0,0,0,,0,1,0,1,1,1,1,0,0,,2,2,1,0,1,0,1,0,0,0,1,1,1,1,1,1,1,1,0,0,1,9,,10,6,2,2,,2
+10,,4/24/2018,3,2,,Comprehensive Care,64,1,0,0,0,0,0,0,0,0,0,,0,1,0,0,1,1,1,0,0,,1,2,1,1,0,0,1,0,0,0,1,0,0,1,1,1,1,0,0,0,9,0,,8,3,1,1,,2
+11,,4/24/2018,2,2,,Prosthodontics,62,2,0,0,0,0,0,0,0,0,0,,0,1,0,1,0,1,1,0,0,,2,,0,0,0,0,1,1,0,0,1,1,0,1,1,1,1,0,0,0,1,9,,8,3,2,2,,2
+12,,4/24/2018,2,3,Clinical Associate Professor,,69,1,0,0,0,0,0,0,0,0,0,,0,0,0,0,0,1,0,0,0,,1,2,0,1,0,1,1,1,1,0,1,1,1,1,1,0,1,0,0,0,9,9,,7,3,1,1,,2
+13,,4/27/2018,3,2,,Restorative Clinical Sciences,46,2,1,0,0,0,0,0,0,1,0,,0,1,0,0,1,1,1,0,0,,2,,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,,5,1,1,1,,2
+14,,4/29/2018,1,1,,,66,1,0,0,0,0,0,0,0,0,0,,0,0,0,1,0,1,1,0,0,,2,2,1,1,0,0,1,0,0,0,1,0,0,0,1,0,1,0,0,0,1,0,,10,3,2,,,2
+15,,5/1/2018,2,2,,Prosthodontics,70,1,,0,0,0,0,0,0,0,0,,0,1,0,0,1,1,1,0,0,,1,,0,1,0,0,1,1,0,0,,0,0,0,0,0,0,1,0,0,9,9,,8,4,2,2,,2
+16,,5/11/2018,2,3,Clinical Professor,,65,2,1,1,1,0,1,0,0,0,0,,0,1,0,1,1,1,0,0,0,,1,1,1,0,0,0,1,0,0,0,1,1,0,1,1,0,1,0,0,0,1,9,,8,3,2,2,,2
+17,,5/18/2018,4,1,,,45,1,1,1,1,1,1,1,1,1,0,,0,1,0,0,1,1,1,1,0,"Oral Diagnosis, Pathology",2,2,1,1,0,0,1,0,0,0,1,1,1,1,1,1,1,0,0,0,9,9,,10,4,2,2,,2
+18,,5/19/2018,3,3,Clinical Dean,,59,2,0,0,0,0,0,0,0,0,0,,0,1,0,1,1,1,1,0,0,,1,2,0,1,0,0,1,1,0,0,1,0,1,1,1,0,1,0,0,0,1,0,,9,4,2,2,,2
+19,,5/20/2018,4,3,Assistant Professor,,44,2,1,0,0,0,0,0,0,1,0,,0,1,0,0,1,1,1,1,0,Pediatric Dentistry,2,2,1,1,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,0,1,9,,10,2,2,2,,2
+20,,5/22/2018,4,3,Director,,40,3,1,0,1,0,0,0,0,0,0,,0,1,1,1,1,1,1,0,0,,0,2,0,1,1,0,1,0,0,0,1,1,1,1,1,1,1,0,0,0,1,0,,3,4,1,1,,2

@@ -1,0 +1,956 @@
+---
+title: "Creating Tables and Plots for Students"
+author: "Spiro Stilianoudakis"
+date: "September 24, 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+```
+
+
+```{r}
+library(ggplot2)
+library(DT)
+library(knitr)
+```
+
+# Student Survey
+
+```{r}
+setwd("Y:/Oral Health Services Research Core/Spiro/Holtz_Lena")
+
+students <- readRDS("students.rds")
+
+#removing students that didn't answer specific questions
+vars <- c("record_id","infection","choosing","dose","duration","demand","should_role", "percent_unnecessary", "more_educ","num_rx","broad_spec","long_duration","dose_low","livestock","hand_wash","development","not_warranted","diagnostic_tools","wrong_anti","non_compliance", "age")
+
+students <- students[complete.cases(students[,which(names(students) %in% vars)]),]
+
+dim(students) 
+
+saveRDS(students, "students.rds")
+
+```
+
+## Year of Dental School
+
+### What year of dental school are you in?
+
+```{r}
+year <- data.frame(table(students$year_school, useNA = "ifany"))
+
+p<-ggplot(data=year, aes(x = Var1, y = Freq)) +
+  #ylim(0,8) +
+  ylab("Count") +
+  xlab("Year of Dental School") +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Freq), vjust=-.5, color="black", size=5)+
+  scale_x_discrete(labels=c("3rd", "4th"))+
+  theme_minimal() #+
+  #coord_flip()
+p
+
+
+```
+
+## School Region
+
+###What is the region of your dental school?
+
+```{r}
+region <- data.frame(table(students$region, useNA = "ifany"))
+names(region) <- c("Region", "Count")
+
+p<-ggplot(data=region, aes(x = Region, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  scale_x_discrete(labels=c("Northeast",
+                            "South",
+                            "Midwest",
+                            "West"))+
+  theme_minimal() #+
+  #coord_flip()
+p
+
+```
+
+
+## Age
+###What is your age?
+
+```{r}
+#summary(students$age)
+
+age <- data.frame(Minimum = as.vector(summary(students$age))[1],
+                  "First Quartile"= as.vector(summary(students$age))[2],
+                  Median= as.vector(summary(students$age))[3],
+                  Mean= as.vector(summary(students$age))[4],
+                  SD=sd(na.omit(students$age)),
+                  "Third Quartile"= as.vector(summary(students$age))[5],
+                  Maximum= as.vector(summary(students$age))[6],
+                  Missing=length(which(is.na(students$age))))
+age <- round(age, 2)
+#datatable(age)
+kable(age)
+
+```
+
+
+## Gender
+###What is your gender?
+
+```{r}
+gender <- data.frame(table(students$gender, useNA = "ifany"))
+names(gender) <- c("Gender", "Count")
+
+p<-ggplot(data=gender, aes(x = Gender, y = Count)) +
+  ylim(0,115) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("Male",
+                            "Female"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 20))) #+
+  #coord_flip()
+p
+```
+
+##Plans
+###What are your plans following graduation?
+
+```{r}
+plans <- data.frame(table(students$plans, useNA = "ifany"))
+
+p<-ggplot(data=plans, aes(x = Var1, y = Freq)) +
+  ylim(0,82) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  ylab("Count")+
+  xlab("Career")+ 
+  geom_text(aes(label=Freq), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("Private Practice",
+                            "Academia",
+                            "Public Practice",
+                            "Corporate Practice",
+                            "Residency",
+                            "Other"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 20))) #+
+  #coord_flip()
+p
+
+```
+
+##Residency
+###Which residency are you most interested in
+
+```{r}
+
+residency <- data.frame(table(students$residency, useNA = "always"))
+
+p<-ggplot(data=residency, aes(x = stringr::str_wrap(Var1, 10), y = Freq)) +
+  #ylim(0,26) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  ylab("Count")+
+  xlab("Career")+ 
+  geom_text(aes(label=Freq), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("Advanced Ed in Gen Dentistry",
+                            #"Dental Public Health",
+                            "Endodontics",
+                            "General Practice Residency",
+                            #"Oral & Maxillofacial Radiology",
+                            "Oral & Maxillofacial Surgery",
+                            #"Oral & Maxillofacial Pathology",
+                            "Orthodontics",
+                            "Pediatric Dentistry",
+                            "Periodontics",
+                            "Prosthodontics",
+                            "Unknown"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 50))) #+
+  #coord_flip()
+p
+
+```
+
+
+##rate_curriculum
+###How would you rate your dental education regarding appropriate use of antibiotics so far in your dental school curriculum?
+
+```{r}
+
+curriculum <- data.frame(table(students$rate_curriculum, useNA = "ifany"))
+curriculum$Var1 <- as.numeric(as.character(curriculum$Var1))
+curriculum <- curriculum[order(curriculum$Var1, decreasing = TRUE),]
+curriculum$Var1 <- factor(curriculum$Var1, levels = c("2", "1", "0", "-1", "-2"))
+
+
+p<-ggplot(data=curriculum, aes(x = Var1, y = Freq)) +
+  ylim(0,101) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  ylab("Count")+
+  xlab("Rating")+ 
+  geom_text(aes(label=Freq), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("Very useful",
+                            "Useful",
+                            "Neutral",
+                            "Not useful",
+                            "Not at all useful"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 20))) #+
+  #coord_flip()
+p
+
+```
+
+##Department Courses
+###Which department/courses do you feel you have gained the majority of your decision-making skills and knowledge regarding antibiotic prescribing practices? [Please select up to 3]
+
+```{r}
+courses <- students[,grep("dept_courses___",names(students))]
+courses <- courses[,1:9]
+courses <- data.frame(colSums(courses))
+
+p<-ggplot(data=courses, aes(x = rownames(courses), y = colSums.courses.)) +
+  ylim(0,135) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  ylab("Count")+
+  xlab("Department")+ 
+  geom_text(aes(label=colSums.courses.), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("Community Dentistry",
+                            "Endodontics",
+                            "Epidemiology",
+                            "Microbiology",
+                            "Periodontics",
+                            "Pharmacology",
+                            "Oral Diagnosis/Medicine",
+                            "Oral Surgery",
+                            "Other"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 20))) #+
+  #coord_flip()
+p
+
+```
+
+##Hours
+###How many hours of training in principles of antibiotic use do you think you have received to date in your dental education?
+
+```{r}
+hours <- data.frame(table(students$hours_training, useNA = "ifany"))
+names(hours) <- c("Hours", "Count")
+
+p<-ggplot(data=hours, aes(x = Hours, y = Count)) +
+  ylim(0,76) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("0-10",
+                            "11-20",
+                            "21-40",
+                            "41-60",
+                            "61+"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+```
+
+##Teaching format
+###What kind of teaching format has been used during your education on antibiotics? [Choose all that apply]
+```{r}
+teaching <- students[,grep("teaching_format___",names(students))]
+teaching <- teaching[,1:6]
+teaching <- data.frame(colSums(teaching))
+
+p<-ggplot(data=teaching, aes(x = rownames(teaching), y = colSums.teaching.)) +
+  ylim(0,190) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  ylab("Count")+
+  xlab("Department")+ 
+  geom_text(aes(label=colSums.teaching.), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("Lectures",
+                            "Clinical Vignettes/Case Discussions",
+                            "E-learning",
+                            "Web-based learning platform",
+                            "Direct patient care",
+                            "Other"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 50))) #+
+  #coord_flip()
+p
+
+```
+
+##Helpful
+###Which of the teaching formats do you feel were most helpful in your education and understanding related to antibiotics? [Please select up to 3]
+
+```{r}
+helpful <- students[,grep("format_helpful___",names(students))]
+helpful <- helpful[,1:8]
+helpful <- data.frame(colSums(helpful))
+
+p<-ggplot(data=helpful, aes(x = rownames(helpful), y = colSums.helpful.)) +
+  ylim(0,152) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  ylab("Count")+
+  xlab("Department")+ 
+  geom_text(aes(label=colSums.helpful.), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("Lectures",
+                            "Clinical Vignettes/Case Discussions",
+                            "E-learning",
+                            "Web-based learning platform",
+                            "Direct patient care",
+                            "Specialty Rotations",
+                            "External Rotations",
+                            "Other"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 50))) #+
+  #coord_flip()
+p
+
+```
+
+##Guidelines
+###Do you currently have established clinical guidelines for antibiotic prescribing within any of the following disciplines at your dental school? [Choose all that apply]
+
+```{r}
+guides <- students[,grep("guidelines___",names(students))]
+guides <- guides[,1:9]
+guides <- data.frame(colSums(guides))
+
+p<-ggplot(data=guides, aes(x = rownames(guides), y = colSums.guides.)) +
+  ylim(0,109) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  ylab("Count")+
+  xlab("Department")+ 
+  geom_text(aes(label=colSums.guides.), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("Endodontics",
+                            "General Practice",
+                            "Oral Diagnosis/Medicine",
+                            "Oral Surgery",
+                            "Pediatrics",
+                            "Periodontics",
+                            "Institution-wide",
+                            "Other",
+                            "I don't know"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 20))) #+
+  #coord_flip()
+p
+
+```
+
+##Greatest Impact
+###Who/what has had the greatest impact on your decision of when and how to prescribe antibiotics?[Please select up to 3]
+
+```{r}
+impact <- students[,grep("greatest_impact___",names(students))]
+impact <- impact[,1:7]
+impact <- data.frame(colSums(impact))
+
+p<-ggplot(data=impact, aes(x = rownames(impact), y = colSums.impact.)) +
+  ylim(0,170) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  ylab("Count")+
+  xlab("Department")+ 
+  geom_text(aes(label=colSums.impact.), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("Full-time faculty in clinic",
+                            "Part-time faculty in clinic",
+                            "Student peers",
+                            "Didactic courses",
+                            "Personal experience",
+                            "Personal research/investigation",
+                            "Other"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 40))) #+
+  #coord_flip()
+p
+
+```
+
+
+##Confidence
+###With your current level of understanding, how confident would you feel in the following scenarios when prescribing an antibiotic by yourself? Please use the scale provided to answer with 0 indicating not at all confident and 100 indicating very confident.
+
+```{r}
+vars <- c("record_id","infection","choosing","dose","duration","demand")
+confidence <- students[,which(names(students) %in% vars)]
+
+#infection
+#summary(confidence$infection)
+infection <- data.frame(Minimum = as.vector(summary(confidence$infection))[1],
+                  "First Quartile"= as.vector(summary(confidence$infection))[2],
+                  Median= as.vector(summary(confidence$infection))[3],
+                  Mean= as.vector(summary(confidence$infection))[4],
+                  SD = sd(na.omit(confidence$infection)),
+                  "Third Quartile"= as.vector(summary(confidence$infection))[5],
+                  Maximum= as.vector(summary(confidence$infection))[6],
+                  Missing=length(which(is.na(confidence$infection))))
+infection <- round(infection, 2)
+kable(infection)
+
+
+#choosing
+#summary(confidence$choosing)
+choosing <- data.frame(Minimum = as.vector(summary(confidence$choosing))[1],
+                  "First Quartile"= as.vector(summary(confidence$choosing))[2],
+                  Median= as.vector(summary(confidence$choosing))[3],
+                  Mean= as.vector(summary(confidence$choosing))[4],
+                  SD = sd(na.omit(confidence$choosing)),
+                  "Third Quartile"= as.vector(summary(confidence$choosing))[5],
+                  Maximum= as.vector(summary(confidence$choosing))[6],
+                  Missing=length(which(is.na(confidence$choosing))))
+choosing <- round(choosing, 2)
+kable(choosing)
+
+
+#dose
+#summary(confidence$dose)
+dose <- data.frame(Minimum = as.vector(summary(confidence$dose))[1],
+                  "First Quartile"= as.vector(summary(confidence$dose))[2],
+                  Median= as.vector(summary(confidence$dose))[3],
+                  Mean= as.vector(summary(confidence$dose))[4],
+                  SD = sd(na.omit(confidence$dose)),
+                  "Third Quartile"= as.vector(summary(confidence$dose))[5],
+                  Maximum= as.vector(summary(confidence$dose))[6],
+                  Missing=length(which(is.na(confidence$dose))))
+dose <- round(dose, 2)
+kable(dose)
+
+
+#duration
+#summary(confidence$duration)
+duration <- data.frame(Minimum = as.vector(summary(confidence$duration))[1],
+                  "First Quartile"= as.vector(summary(confidence$duration))[2],
+                  Median= as.vector(summary(confidence$duration))[3],
+                  Mean= as.vector(summary(confidence$duration))[4],
+                  SD = sd(na.omit(confidence$duration)),
+                  "Third Quartile"= as.vector(summary(confidence$duration))[5],
+                  Maximum= as.vector(summary(confidence$duration))[6],
+                  Missing=length(which(is.na(confidence$duration))))
+duration <- round(duration, 2)
+kable(duration)
+
+
+#demand
+#summary(confidence$demand)
+demand <- data.frame(Minimum = as.vector(summary(confidence$demand))[1],
+                  "First Quartile"= as.vector(summary(confidence$demand))[2],
+                  Median= as.vector(summary(confidence$demand))[3],
+                  Mean= as.vector(summary(confidence$demand))[4],
+                  SD = sd(na.omit(confidence$demand)),
+                  "Third Quartile"= as.vector(summary(confidence$demand))[5],
+                  Maximum= as.vector(summary(confidence$demand))[6],
+                  Missing=length(which(is.na(confidence$demand))))
+demand <- round(demand, 2)
+kable(demand)
+```
+
+
+##More education
+###Would you like more education on antibiotic selection and indications at your dental school?
+
+```{r}
+
+moreed <- data.frame(table(students$more_educ, useNA = "ifany"))
+names(moreed) <- c("Response", "Count")
+
+p<-ggplot(data=moreed, aes(x = Response, y = Count)) +
+  ylim(0,135) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No",
+                            "Yes",
+                            "Adequate training"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+
+```
+
+
+##Unethical
+###Do you believe that prescribing antibiotics when they are not indicated is professionally unethical?
+
+```{r}
+unethic <- data.frame(table(students$unethical, useNA = "ifany"))
+names(unethic) <- c("Response", "Count")
+
+p<-ggplot(data=unethic, aes(x = Response, y = Count)) +
+  ylim(0,157) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No",
+                            "Yes",
+                            "Unsure"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+
+```
+
+
+##Resist
+###Do you think that antibiotic resistance is a national problem?
+
+```{r}
+
+resist <- data.frame(table(students$national_problem, useNA = "ifany"))
+names(resist) <- c("Response", "Count")
+
+p<-ggplot(data=resist, aes(x = Response, y = Count)) +
+  ylim(0,178) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No",
+                            "Yes",
+                            "Unsure"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+
+
+```
+
+##Scenarios
+###The following scenarios are potential causes for resistance; please identify which, in your opinion, are the most or least important contributors to resistance?
+
+```{r}
+vars <- c("num_rx","broad_spec","long_duration","dose_low","livestock","hand_wash","development","not_warranted","diagnostic_tools","wrong_anti","non_compliance" )
+
+scenarios <- students[,which(names(students) %in% vars)]
+title <- c("Too many antibiotic prescriptions",
+           "Too many broad-spectrum antibiotics used",
+           "Too long of a duration of antibiotic treatment",
+           "Dosing of antibiotics are too low",
+           "Excessive use of antibiotics in livestock",
+           "Poor hand hygiene",
+           "Lack of antibiotics being developed",
+           "Prescribing antibiotics when the situation doesn't warrant its use",
+           "Lack of effective diagnostic tools",
+           "Using the wrong antibiotic for the situation",
+           "Patient non-compliance or self-medicating with antibiotic treatment")
+
+  
+  df1 <- data.frame(table(scenarios[,1], useNA = "ifany"))
+  names(df1) <- c("Response", "Count")
+  
+  p <- ggplot(data=df1, aes(x = Response, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No Impact",
+                            "Some Impact",
+                            "Great Impact"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15)))+
+    ggtitle(title[1])
+  p
+  
+##########################
+  
+df2 <- data.frame(table(scenarios[,2], useNA = "ifany"))
+  names(df2) <- c("Response", "Count")
+  
+  p <- ggplot(data=df2, aes(x = Response, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No Impact",
+                            "Some Impact",
+                            "Great Impact"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15)))+
+    ggtitle(title[2])
+  p
+
+  ##########################
+  
+df3 <- data.frame(table(scenarios[,3], useNA = "ifany"))
+  names(df3) <- c("Response", "Count")
+  
+  p <- ggplot(data=df3, aes(x = Response, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No Impact",
+                            "Some Impact",
+                            "Great Impact"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15)))+
+    ggtitle(title[3])
+  p
+
+  ##########################
+  
+df4 <- data.frame(table(scenarios[,4], useNA = "ifany"))
+  names(df4) <- c("Response", "Count")
+  
+  p <- ggplot(data=df4, aes(x = Response, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No Impact",
+                            "Some Impact",
+                            "Great Impact"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15)))+
+    ggtitle(title[4])
+  p
+
+  ##########################
+  
+df5 <- data.frame(table(scenarios[,5], useNA = "ifany"))
+  names(df5) <- c("Response", "Count")
+  
+  p <- ggplot(data=df5, aes(x = Response, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No Impact",
+                            "Some Impact",
+                            "Great Impact"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15)))+
+    ggtitle(title[5])
+  p
+
+  ##########################
+  
+df6 <- data.frame(table(scenarios[,6], useNA = "ifany"))
+  names(df6) <- c("Response", "Count")
+  
+  p <- ggplot(data=df6, aes(x = Response, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No Impact",
+                            "Some Impact",
+                            "Great Impact"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15)))+
+    ggtitle(title[6])
+  p
+
+  ##########################
+  
+df7 <- data.frame(table(scenarios[,7], useNA = "ifany"))
+  names(df7) <- c("Response", "Count")
+  
+  p <- ggplot(data=df7, aes(x = Response, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No Impact",
+                            "Some Impact",
+                            "Great Impact"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15)))+
+    ggtitle(title[7])
+  p
+
+  ##########################
+  
+  df8 <- data.frame(table(scenarios[,8], useNA = "ifany"))
+  names(df8) <- c("Response", "Count")
+  df8 <- rbind.data.frame(data.frame(Response="0", Count=0), df8)
+  
+  p <- ggplot(data=df8, aes(x = Response, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No Impact",
+                            "Some Impact",
+                            "Great Impact"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15)))+
+    ggtitle(title[8])
+  p
+
+  ##########################
+  
+  df9 <- data.frame(table(scenarios[,9], useNA = "ifany"))
+  names(df9) <- c("Response", "Count")
+  #df <- rbind.data.frame(data.frame(Response="0", Count=0), df)
+  
+  p <- ggplot(data=df9, aes(x = Response, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No Impact",
+                            "Some Impact",
+                            "Great Impact"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15)))+
+    ggtitle(title[9])
+  p
+
+  ##########################
+  
+  df10 <- data.frame(table(scenarios[,10], useNA = "ifany"))
+  names(df10) <- c("Response", "Count")
+  #df <- rbind.data.frame(data.frame(Response="0", Count=0), df)
+  
+  p <- ggplot(data=df10, aes(x = Response, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No Impact",
+                            "Some Impact",
+                            "Great Impact"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15)))+
+    ggtitle(title[10])
+  p
+  
+  ##########################
+  
+  df11 <- data.frame(table(scenarios[,11], useNA = "ifany"))
+  names(df11) <- c("Response", "Count")
+  df11 <- rbind.data.frame(data.frame(Response="0", Count=0), df11)
+  
+  p <- ggplot(data=df11, aes(x = Response, y = Count)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("No Impact",
+                            "Some Impact",
+                            "Great Impact"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15)))+
+    ggtitle(title[11])
+  p
+
+
+  
+```
+
+
+##Unnecessary
+###What percentage of antibiotic prescriptions within dentistry do you think are estimated to be unnecessary or inappropriate?
+
+```{r}
+
+unnec <- data.frame(table(students$percent_unnecessary, useNA = "ifany"))
+names(unnec) <- c("Response", "Count")
+
+p<-ggplot(data=unnec, aes(x = Response, y = Count)) +
+  ylim(0,69) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  scale_x_discrete(labels=c("<1%",
+                            "1-20%",
+                            "21-40%",
+                            "41-60%",
+                            "61-80%",
+                            "81-100%"))+
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+
+
+```
+
+
+##Consequences
+###In a 10-year perspective, do you think the consequences of antibiotic resistance will affect your future work when caring for patients with dental infections?
+
+```{r}
+conseq <- data.frame(table(students$future_effect, useNA = "ifany"))
+names(conseq) <- c("Response", "Count")
+conseq <- rbind.data.frame(data.frame(Response="1",Count=0), conseq)
+conseq$Response <- as.factor(conseq$Response)
+
+levels(conseq$Response) <- c("Not at all",
+                          "Rarely",
+                          "Occationally",
+                          "Often",
+                          "Very Often")
+
+p<-ggplot(data=conseq, aes(x = Response, y = Count)) +
+  ylim(0,81) +
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+
+```
+
+
+##Healthcare
+###If so, what do you expect will be the greatest problem within healthcare?
+
+```{r}
+health <- data.frame(table(students$greatest_prob, useNA = "ifany"))
+names(health) <- c("Response", "Count")
+health <- rbind.data.frame(health, data.frame(Response="6",Count=0))
+health$Response <- as.factor(health$Response)
+
+levels(health$Response) <- c("More expensive treatment",
+                          "Fewer treatment alternatives",
+                          "Increased morbidity due to untreatable bacterial infections",
+                          "Increased spread of communicable diseases due to untreatable infections",
+                          "I don't know",
+                          "Other")
+
+p<-ggplot(data=health, aes(x = stringr::str_wrap(Response, 15), y = Count)) +
+  ylim(0,74)+
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  xlab("Problems in healthcare")
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+
+```
+
+
+##Importance
+###On a scale of 0-100, with 0 being the least and 100 being the most, how important do you perceive this topic to be within dental education?
+
+```{r}
+
+import <- data.frame(Minimum = as.vector(summary(students$importance))[1],
+                  "First Quartile"= as.vector(summary(students$importance))[2],
+                  Median= as.vector(summary(students$importance))[3],
+                  Mean= as.vector(summary(students$importance))[4],
+                  SD=sd(na.omit(students$importance)),
+                  "Third Quartile"= as.vector(summary(students$importance))[5],
+                  Maximum= as.vector(summary(students$importance))[6],
+                  Missing=length(which(is.na(students$importance))))
+import <- round(import, 2)
+#datatable(import)
+kable(import)
+```
+
+
+##Stewardship
+###Are you familiar with the term "antimicrobial stewardship"?
+
+```{r}
+steward <- data.frame(table(students$antimicrobial_steward, useNA = "ifany"))
+names(steward) <- c("Response", "Count")
+steward$Response <- factor(steward$Response)
+levels(steward$Response) <- c("Very familiar",
+                          "Familiar",
+                          "Not Familiar",
+                          "Not at all familiar")
+
+p<-ggplot(data=steward, aes(x = Response, y = Count)) +
+  ylim(0,107)+
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+
+```
+
+
+##Important Role
+###Dentistry should play an important role in reducing antimicrobial resistance
+
+```{r}
+
+role <- data.frame(table(students$should_role, useNA = "ifany"))
+names(role) <- c("Response", "Count")
+role <- rbind.data.frame(data.frame(Response="-2",Count=0),
+                         data.frame(Response="-1",Count=0),
+                         role)
+role$Response <- factor(role$Response)
+levels(role$Response) = c("Strongly Disagree",
+                          "Disagree",
+                          "Neutral",
+                          "Agree",
+                          "Strongly Agree")
+
+p<-ggplot(data=role, aes(x = Response, y = Count)) +
+  ylim(0,91)+
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+
+
+```
+
+
+##Self Role
+###How interested are you in playing a role in this improvement through better self-monitoring and antibiotic stewardship? Please use the scale provided to answer with 0 indicating not at all and 100 indicating very interested.
+
+```{r}
+self <- data.frame(Minimum = as.vector(summary(students$self_role))[1],
+                  "First Quartile"= as.vector(summary(students$self_role))[2],
+                  Median= as.vector(summary(students$self_role))[3],
+                  Mean= as.vector(summary(students$self_role))[4],
+                  SD=sd(na.omit(students$self_role)),
+                  "Third Quartile"= as.vector(summary(students$self_role))[5],
+                  Maximum= as.vector(summary(students$self_role))[6],
+                  Missing=length(which(is.na(students$self_role))))
+self <- round(self, 2)
+#datatable(self)
+kable(self)
+```
+
+
+##Contribution
+###Please indicate your agreement with the following sentence: Dental students can contribute in reducing and controlling antibiotic resistance?
+
+```{r}
+
+contribute <- data.frame(table(students$students_contribute, useNA = "ifany"))
+names(contribute) <- c("Response", "Count")
+contribute$Response <- factor(contribute$Response)
+levels(contribute$Response) <- c("Strongly Disagree",
+                          "Disagree",
+                          "Neutral",
+                          "Agree",
+                          "Strongly Agree")
+
+p<-ggplot(data=contribute, aes(x = Response, y = Count)) +
+  ylim(0,89)+
+  geom_bar(stat="identity", fill="steelblue")+
+  #scale_fill_brewer(palette="Blues") +
+  geom_text(aes(label=Count), vjust=-.5, color="black", size=5)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, margin = margin(t = 15))) #+
+  #coord_flip()
+p
+
+
+
+```
+
